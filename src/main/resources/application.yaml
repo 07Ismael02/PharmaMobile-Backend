@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: PharmaMobile-Backend
+  profiles:
+    active: dev
