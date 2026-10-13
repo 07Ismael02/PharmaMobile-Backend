@@ -1,6 +1,6 @@
 package pe.edu.upeu.PharmaBackend.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -62,7 +62,12 @@ public class SecurityConfig {
                             .hasAuthority("USUARIOS_ADMINISTRAR")
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(converter))
+                        .authenticationEntryPoint((request, response, ex) ->
+                                writeError(mapper, request, response, 401, "Unauthorized",
+                                        ex.getMessage() != null && ex.getMessage().contains("expired")
+                                                ? "El token ha expirado"
+                                                : "Autenticación requerida o token inválido")))
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, ex) ->
                                 writeError(mapper, request, response, 401, "Unauthorized", "Autenticación requerida o token inválido"))
