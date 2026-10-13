@@ -3,3 +3,9 @@ spring:
     name: PharmaMobile-Backend
   profiles:
     active: dev
+
+# Configurar JWT_SECRET_BASE64 fuera de Git antes de iniciar Spring Boot.
+# Debe representar al menos 32 bytes aleatorios para HS256.
+app:
+  security:
+    jwt-secret-base64: ${JWT_SECRET_BASE64:}
