@@ -46,7 +46,10 @@ public class JwtConfig {
     Clock jwtClock() { return Clock.systemUTC(); }
 
     @Bean
-    JwtService jwtService(JwtEncoder encoder, Clock clock) { return new JwtService(encoder, clock); }
+    JwtService jwtService(JwtEncoder encoder, Clock clock,
+                          @Value("${app.jwt.expiracion-minutos:60}") long expiracionMinutos) {
+        return new JwtService(encoder, clock, expiracionMinutos);
+    }
 
     @Bean
     PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }

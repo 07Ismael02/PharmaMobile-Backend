@@ -38,7 +38,7 @@ public class AuthService {
         List<String> permisos = PermisosPorRol.deRoles(roles).stream().sorted().toList();
         String token = jwtService.emitir(usuario.getUsername(), List.copyOf(roles), permisos);
         String nombre = usuario.getEmpleado().getNombres() + " " + usuario.getEmpleado().getApellidos();
-        return new LoginResponseDTO(token, "Bearer", JwtService.EXPIRACION_SEGUNDOS,
+        return new LoginResponseDTO(token, "Bearer", jwtService.expiracionSegundos(),
                 usuario.getUsername(), nombre, List.copyOf(roles), permisos);
     }
 

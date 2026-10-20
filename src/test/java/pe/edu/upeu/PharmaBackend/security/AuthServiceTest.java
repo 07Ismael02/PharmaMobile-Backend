@@ -40,6 +40,7 @@ class AuthServiceTest {
         when(repo.findByUsernameIgnoreCase("almacen")).thenReturn(Optional.of(usuario()));
         when(encoder.matches("clave-de-prueba", "hash-de-prueba")).thenReturn(true);
         when(jwt.emitir(anyString(), anyList(), anyList())).thenReturn("token-de-prueba");
+        when(jwt.expiracionSegundos()).thenReturn(3600L);
         var respuesta = new AuthService(repo, encoder, jwt)
                 .iniciarSesion(new LoginRequestDTO("almacen", "clave-de-prueba"));
         assertEquals("Bearer", respuesta.tipo());

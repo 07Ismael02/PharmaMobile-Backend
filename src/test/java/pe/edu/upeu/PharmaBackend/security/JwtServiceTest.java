@@ -34,7 +34,7 @@ class JwtServiceTest {
         Instant ahora = Instant.now();
         JwtService service = new JwtService(
                 NimbusJwtEncoder.withSecretKey(key).algorithm(MacAlgorithm.HS256).build(),
-                Clock.fixed(ahora, ZoneOffset.UTC));
+                Clock.fixed(ahora, ZoneOffset.UTC), 60);
         Jwt jwt = decoder(key).decode(service.emitir("admin", List.of("ADMIN"), List.of("CATALOGO_LEER")));
         assertEquals("admin", jwt.getSubject());
         assertEquals(List.of("ADMIN"), jwt.getClaimAsStringList("roles"));
@@ -47,14 +47,25 @@ class JwtServiceTest {
         SecretKey key = nuevaClave();
         JwtService vigente = new JwtService(
                 NimbusJwtEncoder.withSecretKey(key).algorithm(MacAlgorithm.HS256).build(),
-                Clock.systemUTC());
+                Clock.systemUTC(), 60);
         String tokenVigente = vigente.emitir("admin", List.of("ADMIN"), List.of("CATALOGO_LEER"));
         assertThrows(JwtException.class, () -> decoder(nuevaClave()).decode(tokenVigente));
 
         JwtService expirado = new JwtService(
                 NimbusJwtEncoder.withSecretKey(key).algorithm(MacAlgorithm.HS256).build(),
-                Clock.fixed(Instant.now().minus(Duration.ofHours(2)), ZoneOffset.UTC));
+                Clock.fixed(Instant.now().minus(Duration.ofHours(2)), ZoneOffset.UTC), 60);
         String tokenExpirado = expirado.emitir("admin", List.of("ADMIN"), List.of("CATALOGO_LEER"));
         assertThrows(JwtException.class, () -> decoder(key).decode(tokenExpirado));
+    }
+
+    @Test
+    void admiteUnMinutoTemporalSinCambiarElValorPorDefecto() {
+        SecretKey key = nuevaClave();
+        JwtService service = new JwtService(
+                NimbusJwtEncoder.withSecretKey(key).algorithm(MacAlgorithm.HS256).build(),
+                Clock.systemUTC(), 1);
+        Jwt jwt = decoder(key).decode(service.emitir("admin", List.of("ADMIN"), List.of("CATALOGO_LEER")));
+        assertEquals(Duration.ofMinutes(1), Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt()));
+        assertEquals(60, service.expiracionSegundos());
     }
 }
