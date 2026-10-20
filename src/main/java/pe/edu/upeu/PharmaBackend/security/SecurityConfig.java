@@ -3,6 +3,7 @@ package pe.edu.upeu.PharmaBackend.security;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,9 +12,13 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
+import pe.edu.upeu.PharmaBackend.repository.UsuarioRepository;
 import pe.edu.upeu.PharmaBackend.exception.dto.ErrorResponseDTO;
 
 import java.io.IOException;
@@ -23,7 +28,8 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectMapper mapper) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectMapper mapper,
+                                            UsuarioRepository usuarios) throws Exception {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             List<String> permisos = jwt.getClaimAsStringList("authorities");
@@ -62,21 +68,32 @@ public class SecurityConfig {
                             .hasAuthority("USUARIOS_ADMINISTRAR")
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth
+                        .bearerTokenResolver(request -> {
+                            String cabecera = request.getHeader(HttpHeaders.AUTHORIZATION);
+                            if (cabecera == null || !cabecera.startsWith("Bearer ")) return null;
+                            return new DefaultBearerTokenResolver().resolve(request);
+                        })
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(converter))
-                        .authenticationEntryPoint((request, response, ex) ->
+                        .authenticationEntryPoint((request, response, ex) -> {
+                            if (ex instanceof AuthenticationServiceException) {
+                                writeError(mapper, request, response, 500, "Internal Server Error",
+                                        "No se pudo validar la sesión");
+                            } else {
                                 writeError(mapper, request, response, 401, "Unauthorized",
-                                        ex.getMessage() != null && ex.getMessage().contains("expired")
-                                                ? "El token ha expirado"
-                                                : "Autenticación requerida o token inválido")))
+                                        MensajeAutenticacion.de(request, ex));
+                            }
+                        }))
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, ex) ->
-                                writeError(mapper, request, response, 401, "Unauthorized", "Autenticación requerida o token inválido"))
+                                writeError(mapper, request, response, 401, "Unauthorized",
+                                        MensajeAutenticacion.de(request, ex)))
                         .accessDeniedHandler((request, response, ex) ->
                                 writeError(mapper, request, response, 403, "Forbidden", "No tiene permiso para esta operación")))
+                .addFilterAfter(new UsuarioVigenteFilter(usuarios, mapper), BearerTokenAuthenticationFilter.class)
                 .build();
     }
 
-    private static void writeError(ObjectMapper mapper, HttpServletRequest request,
+    static void writeError(ObjectMapper mapper, HttpServletRequest request,
                                    HttpServletResponse response, int status, String error, String message)
             throws IOException {
         response.setStatus(status);
