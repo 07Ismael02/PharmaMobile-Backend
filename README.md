@@ -17,3 +17,7 @@ El código de seguridad requiere `JWT_SECRET_BASE64`: una clave aleatoria de al 
 Las migraciones V2 y V3 están preparadas pero **no autorizadas para ejecución**. Con Flyway habilitado, el próximo arranque podría aplicarlas automáticamente: no reinicies el backend hasta comprobarlas y autorizarlo expresamente. La validación HTTP y Postman de S10 aún está pendiente.
 
 Este proyecto reutiliza y adapta como referencia académica componentes técnicos de [pharmaSoft](https://github.com/dreyna/pharmaSoft). El repositorio de entrega y su historial Git son independientes.
+
+## Integración autónoma S13
+
+Ver [entorno Oracle/JWT aislado](docs/s13-integracion.md). La Misión 4 autoriza V1–V3 únicamente en el esquema nuevo de desarrollo descrito allí; no autoriza migrar otras bases ni producción.
