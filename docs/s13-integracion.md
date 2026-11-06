@@ -90,3 +90,8 @@ Verificado el 06/11/2026:
 - Primer intento de esquema falló antes de migrar porque Lite no incluye USERS: se creó el tablespace exclusivo PHARMAS13, sin borrar nada. Flyway no falló.
 - Primer arranque Spring aplicó migraciones correctamente pero Tomcat falló por sockets Unix en el contexto MSIX de Codex. El lanzador utiliza solo para su proceso -Djdk.net.unixdomain.tmpdir=C:\PharmaMobile-Nio-TcpFallback (ruta inexistente para activar fallback TCP). No se modifica código funcional ni configuración global. El segundo arranque fue correcto.
 - No se cambiaron V1/V2/V3 ni se usaron clean, repair, DROP o eliminación de volúmenes. Firebase y evidencias visuales Android/iOS quedan para fases posteriores.
+
+### Cierre de evidencias S13 (06/11/2026)
+
+Se corrigió detener-backend.ps1 para comprobar también el classpath del archivo @argfile generado por Spring, conservando la verificación de pertenencia al repositorio. La parada fue probada sobre los dos procesos de ensayo correctos. Se emitió temporalmente JWT de 60 s, se observó HTTP 401 por expiración real y revocación Android, y se restauró la emisión normal a 3600 s. No se cambiaron migraciones ni código funcional.
+
