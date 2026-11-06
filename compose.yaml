@@ -1,0 +1,23 @@
+name: pharmamobile-s13
+services:
+  oracle:
+    image: container-registry.oracle.com/database/free:23.26.0.0-lite@sha256:ec92fdc8d687c12d6501d5ad1a5827838f1ef5026c997ac878009491b167b2a1
+    ports:
+      - "127.0.0.1:1522:1521"
+    environment:
+      ORACLE_PWD: ${ORACLE_PWD:?Use scripts/s13/entorno.ps1}
+      ORACLE_PDB: FREEPDB1
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    shm_size: 1gb
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "$${ORACLE_BASE}/checkDBStatus.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 60s
+    restart: unless-stopped
+volumes:
+  oracle-data:
+    name: pharmamobile-s13-oracle-data
